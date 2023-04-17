@@ -1,18 +1,9 @@
-title: "Week 03 Questions"
-
-format:
-  html:
-    code-fold: false
-    code-tools: true
-    code-copy: true
-    highlight-style: github
-    code-overflow: wrap
----
+# Week 03 Questions
 
 a)  **An R Markdown file is plain text file that contains what 3 important types of content?**
-(1) An (optional) YAML header surrounded by ---s.
-(2) Chunks of R code surrounded by ```.
-(3) Text mixed with simple text formatting like # heading and _italics_.
+* (1) An (optional) YAML header surrounded by ---s.
+* (2) Chunks of R code surrounded by ```.
+* (3) Text mixed with simple text formatting like # heading and _italics_.
 
 b)  **What is a chunk and how do you add them? of the many chunk options which one do you think you will use the most and why? How is inline code different than code chunks?**
 Chunks are sections of code that you are able to run in an R Markdown file. You can add them via the following 3 methods:
