@@ -1,0 +1,150 @@
+---
+title: "01-blast"
+author: "Zach Bengtsson"
+date: "5/11/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Download NCBI Blast
+
+```{bash, eval=FALSE}
+cd /Applications/bioinfo/
+curl -O https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.14.0+-x64-macosx.tar.gz
+tar -xf ncbi-blast-2.14.0+-x64-macosx.tar.gz
+```
+
+```{bash, eval=FALSE}
+ls /Applications/bioinfo/
+```
+
+```{bash, eval=FALSE}
+/Applications/bioinfo/ncbi-blast-2.14.0+/bin/blastx -h
+```
+
+## 2. Make a Blast Database
+
+```{bash, eval=FALSE}
+cd ../data
+curl -O https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+mv uniprot_sprot.fasta.gz uniprot_sprot_r2023_01.fasta.gz
+gunzip -k uniprot_sprot_r2023_01.fasta.gz
+ls ../data
+```
+
+```{bash, eval=FALSE}
+/Applications/bioinfo/ncbi-blast-2.14.0+/bin/makeblastdb \
+-in ../data/uniprot_sprot_r2023_01.fasta \
+-dbtype prot \
+-out ../blastdb/uniprot_sprot_r2023_01
+```
+
+## 3. Retrieve Query Sequence
+
+```{bash, eval=FALSE}
+curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
+-k \
+> ../data/Ab_4denovo_CLC6_a.fa
+```
+
+```{bash, eval=TRUE}
+head ../data/Ab_4denovo_CLC6_a.fa
+echo "How many sequences are there?"
+grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
+```
+
+## 4. Run Blast
+
+```{bash, eval=FALSE}
+/Applications/bioinfo/ncbi-blast-2.14.0+/bin/blastx \
+-query ../data/Ab_4denovo_CLC6_a.fa \
+-db ../blastdb/uniprot_sprot_r2023_01 \
+-out ../output/Ab_4-uniprot_blastx.tab \
+-evalue 1E-20 \
+-num_threads 100 \
+-max_target_seqs 1 \
+-outfmt 6
+```
+
+```{bash, eval=FALSE}
+head -2 ../output/Ab_4-uniprot_blastx.tab
+wc -l ../output/Ab_4-uniprot_blastx.tab
+```
+
+## 5. Add more Information
+
+```{bash, eval=FALSE}
+curl -o "Accept: text/plain; format=tsv" "https://rest.uniprot.org/uniprotkb/search?query=reviewed:true+AND+organism_id:9606"
+```
+
+```{bash, eval=FALSE}
+curl -o uniprot_table_r2023_01.tab -H "Accept: text/plain; format=tsv" "https://rest.uniprot.org/uniprotkb/stream?compressed=true&fields=accession%2Creviewed%2Cid%2Cprotein_name%2Cgene_names%2Corganism_name%2Clength%2Cgo_f%2Cgo%2Cgo_p%2Cgo_c%2Cgo_id%2Ccc_interaction%2Cec%2Cxref_reactome%2Cxref_unipathway%2Cxref_interpro&format=tsv&query=%28%2A%29%20AND%20%28reviewed%3Atrue%29"
+```
+
+```{bash, eval=FALSE}
+head -2 ../output/Ab_4-uniprot_blastx.tab
+wc -l ../output/Ab_4-uniprot_blastx.tab
+```
+
+```{bash, eval=FALSE}
+tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab | head -2
+```
+
+```{bash, eval=FALSE}
+tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
+> ../output/Ab_4-uniprot_blastx_sep.tab
+```
+
+```{bash, eval=FALSE}
+head -2 ../code/uniprot_table_r2023_01.tab
+wc -l ../code/uniprot_table_r2023_01.tab
+```
+
+## 6. Load Packages
+
+```{r, eval=TRUE, echo=FALSE}
+library(tidyverse)
+library(readr)
+library(dplyr)
+library(httr)
+library(kableExtra)
+library(magrittr)
+```
+
+## 7. Join Blast and Annotation Tables
+
+```{r, eval=TRUE, echo=FALSE}
+bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
+url <- "https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab"
+response <- GET(url, config(ssl_verifypeer = FALSE))
+spgo <- read.csv(text = rawToChar(response$content), sep = "\t", header = TRUE)
+```
+
+```{r, eval=FALSE}
+str(spgo)
+```
+
+```{r, eval=TRUE, echo=TRUE}
+kbl(
+head(
+  left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
+  select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
+            pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab"))
+)
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+```{r}
+left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
+  select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
+            pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab")) %>%
+  write_delim("../output/blast_annot_go.tab", delim = '\t')
+```
+
+```{bash}
+head ../output/blast_annot_go.tab
+```

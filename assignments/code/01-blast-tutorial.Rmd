@@ -185,6 +185,7 @@ library(readr)
 library(dplyr)
 library(httr)
 library(kableExtra)
+library(magrittr)
 ```
 
 ## Put Together or Something
@@ -217,6 +218,11 @@ left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
             pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab")) %>%
   write_delim("../output/blast_annot_go.tab", delim = '\t')
 ```
+
+```{bash}
+head ../output/blast_annot_go.tab
+```
+
 
 ## R Markdown
 
