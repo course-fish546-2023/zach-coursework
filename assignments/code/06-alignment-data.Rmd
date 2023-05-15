@@ -109,3 +109,5 @@ awk 'BEGIN{OFS="\t"} {split($8, a, ";"); print $1,$2,$4,$5,$6,a[1],$9,$10}' | he
 -v -c ../output/F143_mpile.vcf.gz \
 > ../output/F143_mpile_calls.vcf
 ```
+
+Check out final screenshots [here](https://github.com/course-fish546-2023/zach-coursework/blob/main/assignments/output/06-02-alignment-data-visualization.md)
