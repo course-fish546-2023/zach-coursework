@@ -15,11 +15,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Download NCBI Blast
+# Download NCBI Blast
 
 The most current version is 2.14.0. Follow [this link](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) to make sure you are downloading the most recent version.
 
-### curl and tar
+## curl and tar
 
 * `curl` will download the software to your chosen location
 * `tar` will unzip your downloaded file so the software may be called and used
@@ -32,7 +32,7 @@ curl -O https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-
 tar -xf ncbi-blast-2.14.0+-x64-macosx.tar.gz
 ```
 
-### Check
+## Check
 
 Ensure your bioinfo folder contains the unzipped version of NCBI Blast. In this case, ncbi-blast-2.14.0+.
 
@@ -40,7 +40,7 @@ Ensure your bioinfo folder contains the unzipped version of NCBI Blast. In this 
 ls /Applications/bioinfo/
 ```
 
-### View Usage Information
+## View Usage Information
 
 This code runs the blastx program, which is part of the NCBI Blast program we downloaded. The `-h` option displays the help message for blastx, which provides information about the program's command line options and usage.
 
@@ -48,11 +48,11 @@ This code runs the blastx program, which is part of the NCBI Blast program we do
 /Applications/bioinfo/ncbi-blast-2.14.0+/bin/blastx -h
 ```
 
-## Make a Blast Database
+# Make a Blast Database
 
 UniProt is a comprehensive, high-quality protein sequence database that provides a central resource for protein sequences and functional information. We will make a blast database using UniProt.
 
-### Download Database
+## Download Database
 
 Download UniProtKB Swiss-Prot protein sequence database in FASTA format.
 
@@ -69,7 +69,7 @@ gunzip -k uniprot_sprot_r2023_01.fasta.gz
 ls ../data
 ```
 
-### Create Blast Database
+## Create Blast Database
 Make blast database with the `makeblastdb` program.
 
 * The first line runs the `makeblastdb` program
@@ -89,7 +89,7 @@ Make blast database with the `makeblastdb` program.
 
 Get the sequence we will be blasting from one of the Roberts Lab's machines.
 
-### Download with `curl`
+## Download with `curl`
 
 * `-k` allows `curl` to proceed and operate even for server connections considered insecure
 * `>` redirects the output to a file named Ab_4denovo_CLC6_a.fa in the ../data/ directory
@@ -100,7 +100,7 @@ curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
 > ../data/Ab_4denovo_CLC6_a.fa
 ```
 
-### Check
+## Check
 
 Inspect the file just downloaded.
 
@@ -114,11 +114,11 @@ echo "How many sequences are there?"
 grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 ```
 
-## Run Blast
+# Run Blast
 
 Perform a blastx search of the protein sequences in the input FASTA file (Ab_4denovo_CLC6_a.fa) against the UniProtKB/Swiss-Prot protein database (uniprot_sprot_r2023_01).
 
-### Run BlastX
+## Run BlastX
 
 * The first line runs the blastx program
 * `-query` specifies the input query FASTA file
@@ -140,23 +140,23 @@ Perform a blastx search of the protein sequences in the input FASTA file (Ab_4de
 -outfmt 6
 ```
 
-### Check
+## Check
 
 Inspect your output file.
 
 * `head` prints the first few lines for viewing
 * `wc -l` counts the number of lines in the file 
 
-```{bash, eval=FALSE}
+```{bash, eval=TRUE}
 head -2 ../output/Ab_4-uniprot_blastx.tab
 wc -l ../output/Ab_4-uniprot_blastx.tab
 ```
 
-## Get Annotation Information
+# Get Annotation Information
 
-### Query the Uniprot Database
+## Query the Uniprot Database
 
-To generate the API URL used with `curl` to successfully download the protein database for annotating blast results following go to [this Uniprot website link](https://www.uniprot.org/uniprotkb?facets=reviewed%3Atrue&query=%2A). Then click download > change format to TSV > click Generate URL for API > copy the link for API URL using the streaming endpoint. The link has already been placed in the following code chunk. 
+To generate the API URL used with `curl` to successfully download the SwissProt protein database for annotating blast results following go to [this Uniprot website link](https://www.uniprot.org/uniprotkb?facets=reviewed%3Atrue&query=%2A). Then click download > change format to TSV > click Generate URL for API > copy the link for API URL using the streaming endpoint. The link has already been placed in the following code chunk. 
 
 The database at this URL contains several parameters that specify the fields to be included in the TSV file, such as accession number, protein name, gene names, organism name, length, and various annotations (e.g., Gene Ontology terms, EC numbers, and cross-references to other databases)
 
@@ -168,41 +168,35 @@ The database at this URL contains several parameters that specify the fields to 
 curl -o uniprot_table_r2023_01.tab -H "Accept: text/plain; format=tsv" "https://rest.uniprot.org/uniprotkb/stream?compressed=true&fields=accession%2Creviewed%2Cid%2Cprotein_name%2Cgene_names%2Corganism_name%2Clength%2Cgo_f%2Cgo%2Cgo_p%2Cgo_c%2Cgo_id%2Ccc_interaction%2Cec%2Cxref_reactome%2Cxref_unipathway%2Cxref_interpro&format=tsv&query=%28%2A%29%20AND%20%28reviewed%3Atrue%29"
 ```
 
-## Join Blast and Annotation Tables
+# Join Blast and Annotation Tables
 
-### Inspect Blast Table
+## Inspect Blast Table
 
-* `head -2` prints the first two lines of the file
-* `wc` counts the number of lines, words, and bytes in a file, and the -l flag specifies that it should count only the number of lines
-
-```{bash, eval=FALSE}
+```{bash, eval=TRUE}
 head -2 ../output/Ab_4-uniprot_blastx.tab
 wc -l ../output/Ab_4-uniprot_blastx.tab
 ```
 
-### Process Blast Table
+## Process Blast Table
 
-The Blast table needs some reformatting to join with the annotation table...
+The Blast table needs to be converted to a tab separated table to join with the annotation table, which is already in tab separated format.
 
-This code uses the `tr` replaces the vertical bars (|) in the file located at ../output/Ab_4-uniprot_blastx.tab with tabs (\t). The modified file is then piped to head -2 to print the first two lines of the file with the replaced separator
+* `tr` replaces the vertical bars (|) in the file Blast table (Ab_4-uniprot_blastx.tab) with tabs (\t)
+* The resulting output is then redirected to a new file (../output/Ab_4-uniprot_blastx_sep.tab) using the `>` operator
+* The output file is then piped to `head -2` to print the first two lines of the file with the replaced separator
 
-```{bash, eval=FALSE}
-tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab | head -2
-```
-
-```{bash, eval=FALSE}
+```{bash, eval=TRUE}
 tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
 > ../output/Ab_4-uniprot_blastx_sep.tab
+
+head -2 ../output/Ab_4-uniprot_blastx_sep.tab
 ```
 
-```{bash, eval=FALSE}
-head -2 ../code/uniprot_table_r2023_01.tab
-wc -l ../code/uniprot_table_r2023_01.tab
-```
+## Load Packages
 
-## 6. Load Packages
+These packages are necessary to join and display the two tables.
 
-```{r, eval=TRUE, echo=FALSE}
+```{r, eval=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(readr)
 library(dplyr)
@@ -211,18 +205,25 @@ library(kableExtra)
 library(magrittr)
 ```
 
-## Put Together or Something
+## Read in Data Tables
 
-```{r, eval=TRUE, echo=FALSE}
+The following chunk reads the Blast and annotation tables in as dataframes called `bltabl` and `spgo`. Note that the SwissProt table downloaded from UniProt website is hosted on the Gannet server and read in directly via URL.
+
+```{r, eval=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
 url <- "https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab"
 response <- GET(url, config(ssl_verifypeer = FALSE))
 spgo <- read.csv(text = rawToChar(response$content), sep = "\t", header = TRUE)
 ```
 
-```{r, eval=FALSE}
-str(spgo)
-```
+## Combine Blast and Annotation Tables
+
+This code creates a table that combines the results of the BlastX and information about the SwissProt entries that were hit by the query by taking the bltabl and spgo data frames and joining them together based on the V3 and Entry columns, respectively. And then displays the results.
+
+* The `select` function is then used to keep only certain columns from the resulting data frame, specifically V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., and Gene.Ontology.IDs
+* The `mutate` function is used to rename the V1 column by replacing a specific string of characters within the column names with "Ab"
+* The resulting data frame is then passed to the `head` function to return the first few rows, and then to the `kbl` function to format it as a table
+* The `kable_styling` function is used to apply Bootstrap styling options to the resulting table
 
 ```{r, eval=TRUE, echo=TRUE}
 kbl(
@@ -235,6 +236,15 @@ head(
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
+## Write Table to Tab Separated File
+
+This code writes the joined table to a tab separated file for further use and completes the same functions as the above code.
+
+* Takes the data from the `bltabl` and `spgo` data frames and performs a left join on them, using `V3` in `bltabl` and `Entry` in `spgo` as the joining columns.
+* Selects columns `V1`, `V3`, `V13`, `Protein.names`, `Organism`, `Gene.Ontology..biological.process.`, and `Gene.Ontology.IDs` from the joined data frame.
+* Replaces all instances of "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed" in column `V1` with "Ab" using the `str_replace_all` function.
+* Writes the resulting data frame to a tab-delimited file named "blast_annot_go.tab" in the "../output/" directory.
+
 ```{r}
 left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
   select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
@@ -242,6 +252,6 @@ left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
   write_delim("../output/blast_annot_go.tab", delim = '\t')
 ```
 
-```{bash}
-head ../output/blast_annot_go.tab
-```
+# Final Output
+
+The final tab file with annotated blast results can be found [here](https://github.com/course-fish546-2023/zach-coursework/blob/main/assignments/output/blast_annot_go.tab).
