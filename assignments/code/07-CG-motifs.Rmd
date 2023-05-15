@@ -9,12 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Links to final screenshots:
+
+![image](https://github.com/course-fish546-2023/zach-coursework/blob/main/assignments/output/07-CG-motif-01.png?raw=true)
+
+![image](https://github.com/course-fish546-2023/zach-coursework/blob/main/assignments/output/07-CG-motif-02.png?raw=true)
 
 ```{r}
 library(seqinr)
 
 # Replace 'input.fasta' with the name of your multi-sequence fasta file
-input_file <- "input.fasta"
+input_file <- "~/github/zach-lncRNA/data/Pver_genome_assembly_v1.0.fasta"
 sequences <- read.fasta(input_file)
 
 ```
@@ -39,7 +44,7 @@ selected_sequences <- sequences[selected_indices]
 
 ```{r}
 # Replace 'output.fasta' with your desired output file name
-output_file <- "../output/output.fasta"
+output_file <- "~/github/zach-coursework/output/07-CG-motifs.fasta"
 write.fasta(selected_sequences, names(selected_sequences), output_file, open = "w")
 ```
 
@@ -53,10 +58,10 @@ write.fasta(selected_sequences, names(selected_sequences), output_file, open = "
 ```{bash}
 #needed downstream for IGV
 /home/shared/samtools-1.12/samtools faidx \
-../output/10_seqs.fa
+~/github/zach-coursework/output/07-CG-motifs.fasta
 ```
 
 
 ```{bash}
-fuzznuc -sequence ../output/10_seqs.fa -pattern CG -rformat gff -outfile ../output/CGoutput.gff
+fuzznuc -sequence ~/github/zach-coursework/output/07-CG-motifs.fasta -pattern CG -rformat gff -outfile ~/github/zach-coursework/output/07-CGoutput.gff
 ```
