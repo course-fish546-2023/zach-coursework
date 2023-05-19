@@ -1,0 +1,68 @@
+---
+title: "08-bedtools"
+author: "Zach Bengtsson"
+date: "2023-05-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Already downloaded so don't need to redo, but here is the code...
+
+```{bash}
+cd ../data 
+curl -O https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/120321-cvBS/19F_R1_val_1_bismark_bt2_pe.deduplicated.sorted.bam 
+curl -O https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/120321-cvBS/19F_R1_val_1_bismark_bt2_pe.deduplicated.sorted.bam.bai
+```
+
+Download BED...
+```{bash}
+cd ../data 
+curl -O https://eagle.fish.washington.edu/Cvirg_tracks/C_virginica-3.0_Gnomon_genes.bed
+```
+
+BAM to BED...
+```{bash}
+/home/shared/bedtools2/bin/bedtools bamtobed \ 
+-i ../data/19F_R1_val_1_bismark_bt2_pe.deduplicated.sorted.bam \ 
+> ../output/08-19F.bed
+```
+
+Run bedtools coverage...
+```{bash}
+/home/shared/bedtools2/bin/bedtools coverage \
+-a ../data/C_virginica-3.0_Gnomon_genes.bed \
+-b ../output/08-19F.bed \
+> ../output/08-gene-19F-coverage.out
+```
+
+Download transposable elements and lncRNAs...
+```{bash}
+cd ../data
+curl -O http://owl.fish.washington.edu/halfshell/genomic-databank/cgigas_uk_roslin_v1_gene.gff curl -O http://owl.fish.washington.edu/halfshell/genomic-databank/cgigas_uk_roslin_v1_rm.te.bed 
+curl -O http://owl.fish.washington.edu/halfshell/genomic-databank/cgigas_uk_roslin_v1_lncRNA.gff
+```
+
+Run intersect...
+```{bash}
+/home/shared/bedtools2/bin/bedtools intersect \
+-a ../data/cgigas_uk_roslin_v1_gene.gff \
+-b ../data/cgigas_uk_roslin_v1_rm.te.bed \
+> ../output/08-gene-TE-intersect.out
+
+head -2 ../output/08-gene-TE-intersect.out
+```
+
+Run closest...
+```{bash}
+/home/shared/bedtools2/bin/bedtools closest \
+-a ../data//cgigas_uk_roslin_v1_lncRNA.gff\
+-b ./data/cgigas_uk_roslin_v1_gene.gff \
+> ../output/08-lnc-gene-closet.out
+```
+
+
+
+
